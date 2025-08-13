@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler'); 
 const bcrpyt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/userModels');
 
 //@desc Register New User
@@ -42,7 +43,31 @@ const registerUser = asyncHandler(async(req, res)=>{
 //@access public
 
 const loginUser = asyncHandler(async(req, res)=>{
-    res.json({message:"logged in user"});
+    const {email, password} = req.body;
+    if(!email || !password){
+        res.status(400);
+        throw new Error("username and password necessary")
+    }
+    
+    const user = await User.findOne({email});
+    if(!user){
+        res.status(404);
+        throw new Error("User not found, register instead!");
+    }
+    if(user && (await bcrpyt.compare(password, user.password))){
+        const accessToken = jwt.sign({
+            user:{
+                username: user.username,
+                email: user.email,
+                id : user.id
+            }
+        }, process.env.ACCESS_TOKEN, {expiresIn: '1h'});
+        res.status(200).json({ accessToken });
+    }
+    else{
+        res.status(401);
+        throw new Error("password invalid!")
+    }
 });
 
 //@desc See Current User
