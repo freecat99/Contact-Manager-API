@@ -6,7 +6,7 @@ const Contact = require('../models/contactModels');
 //@access public
 
 const getContacts = asyncHandler(async(req, res)=>{
-    const contact = await Contact.findById(req.params.id);
+    const contact = await Contact;  
     if(!contact){
         res.status(404);
         throw new Error("Contact not found");
